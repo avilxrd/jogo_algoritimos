@@ -19,9 +19,7 @@ float molex, moley;
 float wmole, hmole;
 float x[3] = {308.1, 559.4, 812};
 float y[3] = {138.8, 343.8, 548.4};
-
 float hole_w = 161.3, hole_h = 80;
-
 
 bool mouse_mole(int mousex, int mousey){
     if(mousex >= molex && mousex <= molex + wmole && mousey >= moley && mousey <= moley + hmole){
@@ -69,22 +67,29 @@ int main(){
         fprintf(stderr, "failed to initialize the image addon!\n");
         return -1;
     }
+    if (!al_install_audio()) {
+    fprintf(stderr, "failed to initialize the audio addon!\n");
+    return -1;
+    }
     if(!al_init_acodec_addon()){
-        fprintf(stderr, "failed to initialize the audio addon!\n");
+        fprintf(stderr, "failed to initialize the acodec addon!\n");
         return -1;
     }
     al_init_font_addon();
     font = al_create_builtin_font();
-    al_set_font_size(font, 36);
     if (!font) {
         fprintf(stderr, "ailed to initialize the font addon!\n");
         return -1;
     }
-    //~~~~~~~~~~PONTEIROS DE BITMAPS~~~~~~~~~~
+    if (!al_init_ttf_addon()) {
+    fprintf(stderr, "failed to initialize the ttf addon!\n");
+    return -1;
+}
+    //~~~~~~~~~~PONTEIROS~~~~~~~~~~
     ALLEGRO_BITMAP * background = NULL;
     ALLEGRO_BITMAP * enemy= NULL;
     ALLEGRO_BITMAP * hole = NULL;
-    ALLEGRO_SAMPLE * background_music = NULL;
+
 
     //~~~~~~~~~~CARREGANDO IMAGENS~~~~~~~~~~
     background = al_load_bitmap("./images/background.png");
@@ -99,59 +104,72 @@ int main(){
     hmole = al_get_bitmap_height(enemy);
     wmole = al_get_bitmap_width(enemy);
 
-    //~~~~~~~~~~CARREGANDO AUDIOS~~~~~~~~~~
-   // al_reserve_samples(10);
-   // background_music = al_load_sample("./audios/background_music.mp3");
+//    ~~~~~~~~~~CARREGANDO AUDIOS~~~~~~~~~~
+//   AUDIOS NAO ESTAO FUNCIONANDO POR ALGUM MOTIVO -> NENHUM TUTORIAL AJUDOU
+    al_reserve_samples(10);
+    ALLEGRO_SAMPLE * trilha_sonora = NULL;
+    ALLEGRO_SAMPLE_INSTANCE * instance_trilha = NULL;
+    trilha_sonora = al_load_sample("./audios/trilha.ogg");
+    instance_trilha = al_create_sample_instance(trilha_sonora);
+    al_attach_sample_instance_to_mixer(instance_trilha, al_get_default_mixer());
+    al_set_sample_instance_playmode(instance_trilha, ALLEGRO_PLAYMODE_LOOP);
 
+//    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    //MENSAGENS DE ERRO
+    //~~~~~~~~~~MENSAGENS DE ERRO~~~~~~~~~~
     if(!background){
         fprintf(stderr, "falhou ao criar bitmap!\n");
         return -1;
     }
     //**--**--**--**
     al_set_target_bitmap(al_get_backbuffer(display));
-    event_queue = al_create_event_queue(); //Criando a fila de eventos
-    //MENSAGEM DE ERRO
+    event_queue = al_create_event_queue();
     if(!event_queue){
         fprintf(stderr, "failed to create event_queue!\n");
         return -1;
     }
-    //EVENTOS
+
+    //~~~~~~~~~~EVENTOS~~~~~~~~~~
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
     al_register_event_source(event_queue, al_get_mouse_event_source());
-    //ATUALIZANDO A TELA
+
+    //~~~~~~~~~~ATUALIZANDO A TELA~~~~~~~~~~
     al_clear_to_color(al_map_rgb(0,0,0));
     al_flip_display();
     al_start_timer(timer);
-    //LOOP PRINCIPAL DO JOGO
+
+    //~~~~~~~~~~LOOP PRINCIPAL DO JOGO~~~~~~~~~~
     int score = 0;
+    int err = 0;
     while(1){
+        al_play_sample_instance(instance_trilha);
         ALLEGRO_EVENT ev;
         al_wait_for_event(event_queue, &ev);
 
         if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN){
-                float mousex = ev.mouse.x;
-                float mousey = ev.mouse.y;
-                printf("x: %f y: %f\n", mousex, mousey);
-                if(mouse_mole(mousex, mousey) == true){
-                        score = score + 1;
-                        status = false;
-                }
+            float mousex = ev.mouse.x;
+            float mousey = ev.mouse.y;
+            printf("x: %f y: %f\n", mousex, mousey);
+            if(mouse_mole(mousex, mousey) == true){
+                score = score + 1;
+                status = false;
+                redraw = true;
+            }else if(mouse_mole(mousex, mousey) == false){
+                err = err + 1;
+                redraw = true;
+            }
         }else if(ev.type == ALLEGRO_EVENT_TIMER){
-            //create_enemy();
             if(status==false){
                 int randx, randy;
                 randx = rand()%3;
                 randy = rand()%3;
                 molex = x[randx] + 15.0;
                 moley = y[randy] - 60.0;
-                al_draw_bitmap(enemy, molex, moley, 0);
                 status = true;
+                redraw = true;
             }
-            redraw = true;
         }else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
             break;
         }
@@ -159,19 +177,18 @@ int main(){
         if(redraw && al_is_event_queue_empty(event_queue)){
             redraw = false;
             al_draw_bitmap(background, 0, 0, 0);
-            for(i=0;i<3;i++){
-                for(j=0;j<3;j++){
+            for(i=0; i<3; i++){
+                for(j=0; j<3; j++){
                     al_draw_bitmap(hole, x[i], y[j], 0);
                 }
             }
             if (status == true) {
                 al_draw_bitmap(enemy, molex, moley, 0);
             }
-            al_draw_textf(font, al_map_rgb(255, 255, 255), SCREEN_W / 2, 25, ALLEGRO_ALIGN_CENTER, "Pontos: %d", score);
+            al_draw_textf(font, al_map_rgb(255, 255, 255), SCREEN_W / 2, 25, ALLEGRO_ALIGN_CENTER, "Pontos: %d     Erros: %d", score, err);
 
             al_flip_display();
         }
-
     }
 
         return 0;
