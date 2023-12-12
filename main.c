@@ -91,7 +91,7 @@ int main(){
     ALLEGRO_BITMAP * hole = NULL;
 
 
-    //~~~~~~~~~~CARREGANDO IMAGENS~~~~~~~~~~
+    //~~~~~~~~~~ IMAGENS~~~~~~~~~~
     background = al_load_bitmap("./images/background.png");
     hole = al_load_bitmap("./images/hole.png");
     int i, j;
@@ -104,15 +104,30 @@ int main(){
     hmole = al_get_bitmap_height(enemy);
     wmole = al_get_bitmap_width(enemy);
 
-//    ~~~~~~~~~~CARREGANDO AUDIOS~~~~~~~~~~
-//   AUDIOS NAO ESTAO FUNCIONANDO POR ALGUM MOTIVO -> NENHUM TUTORIAL AJUDOU
+//    ~~~~~~~~~~ AUDIOS~~~~~~~~~~
     al_reserve_samples(10);
     ALLEGRO_SAMPLE * trilha_sonora = NULL;
+    ALLEGRO_SAMPLE * hit = NULL;
+    ALLEGRO_SAMPLE * error = NULL;
+
     ALLEGRO_SAMPLE_INSTANCE * instance_trilha = NULL;
+    ALLEGRO_SAMPLE_INSTANCE * instance_hit = NULL;
+    ALLEGRO_SAMPLE_INSTANCE * instance_error = NULL;
+
     trilha_sonora = al_load_sample("./audios/trilha.ogg");
+    hit = al_load_sample("./audios/hit.ogg");
+    error = al_load_sample("./audios/error.ogg");
+
     instance_trilha = al_create_sample_instance(trilha_sonora);
+    instance_hit = al_create_sample_instance(hit);
+    instance_error = al_create_sample_instance(error);
+
     al_attach_sample_instance_to_mixer(instance_trilha, al_get_default_mixer());
+    al_attach_sample_instance_to_mixer(instance_hit, al_get_default_mixer());
+    al_attach_sample_instance_to_mixer(instance_error, al_get_default_mixer());
+
     al_set_sample_instance_playmode(instance_trilha, ALLEGRO_PLAYMODE_LOOP);
+
 
 //    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -154,10 +169,12 @@ int main(){
             printf("x: %f y: %f\n", mousex, mousey);
             if(mouse_mole(mousex, mousey) == true){
                 score = score + 1;
+                al_play_sample_instance(instance_hit);
                 status = false;
                 redraw = true;
             }else if(mouse_mole(mousex, mousey) == false){
                 err = err + 1;
+                al_play_sample_instance(instance_error);
                 redraw = true;
             }
         }else if(ev.type == ALLEGRO_EVENT_TIMER){
