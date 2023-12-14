@@ -189,7 +189,11 @@ int main(){
             }
         }else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
             break;
-        }
+        }else if(ev.type == ALLEGRO_EVENT_KEY_DOWN){
+                if(ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
+                        break;
+                }
+            }
 
         if(redraw && al_is_event_queue_empty(event_queue)){
             redraw = false;

@@ -519,3 +519,14 @@
 	"allegro5/allegro.h"
 	"allegro5/allegro_audio.h"
 
+1702585775 source:c:\users\migue\downloads\jogo_algoritimos\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<allegro5/allegro.h>
+	<allegro5/allegro_image.h>
+	<allegro5/allegro_audio.h>
+	<allegro5/allegro_acodec.h>
+	<allegro5/allegro_font.h>
+	<allegro5/allegro_ttf.h>
+
